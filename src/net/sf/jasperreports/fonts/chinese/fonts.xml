@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  JasperReports font extension — Simplified Chinese.
+
+  Built by build.py from Noto Sans CJK SC. The font is modified (CFF
+  outlines converted to TrueType, OS/2 metrics realigned), so it is
+  renamed per SIL OFL 1.1 sections 3 and 5. See OFL.txt.
+
+  pdfEncoding Identity-H is mandatory: a single-byte encoding cannot
+  address CJK code points and characters outside it render blank.
+-->
+<fontFamilies>
+
+  <fontFamily name="Noto Sans SC Jasper">
+    <normal>net/sf/jasperreports/fonts/chinese/NotoSansSC-Regular.ttf</normal>
+    <bold>net/sf/jasperreports/fonts/chinese/NotoSansSC-Bold.ttf</bold>
+    <italic>net/sf/jasperreports/fonts/chinese/NotoSansSC-Regular.ttf</italic>
+    <boldItalic>net/sf/jasperreports/fonts/chinese/NotoSansSC-Bold.ttf</boldItalic>
+    <pdfEncoding>Identity-H</pdfEncoding>
+    <pdfEmbedded>true</pdfEmbedded>
+    <exportFonts>
+      <export key="net.sf.jasperreports.html">"Noto Sans SC Jasper", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
+      <export key="net.sf.jasperreports.xhtml">"Noto Sans SC Jasper", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
+    </exportFonts>
+  </fontFamily>
+
+  <!-- Short alias used by the JRXMLs in examples/. Same font files. -->
+  <fontFamily name="Chinese">
+    <normal>net/sf/jasperreports/fonts/chinese/NotoSansSC-Regular.ttf</normal>
+    <bold>net/sf/jasperreports/fonts/chinese/NotoSansSC-Bold.ttf</bold>
+    <italic>net/sf/jasperreports/fonts/chinese/NotoSansSC-Regular.ttf</italic>
+    <boldItalic>net/sf/jasperreports/fonts/chinese/NotoSansSC-Bold.ttf</boldItalic>
+    <pdfEncoding>Identity-H</pdfEncoding>
+    <pdfEmbedded>true</pdfEmbedded>
+    <exportFonts>
+      <export key="net.sf.jasperreports.html">"Noto Sans SC Jasper", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
+      <export key="net.sf.jasperreports.xhtml">"Noto Sans SC Jasper", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
+    </exportFonts>
+  </fontFamily>
+
+</fontFamilies>

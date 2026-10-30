@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport
+    xmlns="http://jasperreports.sourceforge.net/jasperreports"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+        http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+    name="ChineseCharacterDemo"
+    pageWidth="595"
+    pageHeight="842"
+    columnWidth="535"
+    leftMargin="30"
+    rightMargin="30"
+    topMargin="30"
+    bottomMargin="30"
+    uuid="586e6f49-055a-40b0-ba58-e997877f7144">
+
+    <property name="net.sf.jasperreports.default.font.name" value="Chinese"/>
+
+    <parameter name="reportTitle" class="java.lang.String">
+        <defaultValueExpression><![CDATA["中文报告示例 / Chinese Report Demo"]]></defaultValueExpression>
+    </parameter>
+    <parameter name="companyName" class="java.lang.String">
+        <defaultValueExpression><![CDATA["示例公司 Example Corp"]]></defaultValueExpression>
+    </parameter>
+
+    <field name="productName" class="java.lang.String"/>
+    <field name="productNameCN" class="java.lang.String"/>
+    <field name="quantity" class="java.lang.Integer"/>
+    <field name="unitPrice" class="java.math.BigDecimal"/>
+    <field name="total" class="java.math.BigDecimal"/>
+
+    <variable name="grandTotal" class="java.math.BigDecimal" calculation="Sum">
+        <variableExpression><![CDATA[$F{total}]]></variableExpression>
+    </variable>
+
+    <title>
+        <band height="80" splitType="Stretch">
+            <textField>
+                <reportElement x="0" y="0" width="535" height="40" uuid="fdbe6d5a-8541-4036-8cbc-9cfa15fc5be9"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="Chinese" size="20" isBold="true" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{reportTitle}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="42" width="535" height="24" uuid="e98f9df7-103c-4fdb-aebb-64086d7c9e9e"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Chinese" size="11" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{companyName}]]></textFieldExpression>
+            </textField>
+            <line>
+                <reportElement x="0" y="74" width="535" height="1" uuid="fce3f7b1-16cb-4fc4-b795-506b8357c4e7"/>
+                <graphicElement>
+                    <pen lineWidth="1.5" lineColor="#333333"/>
+                </graphicElement>
+            </line>
+        </band>
+    </title>
+
+    <pageHeader>
+        <band height="20" splitType="Stretch">
+            <textField pattern="yyyy年MM月dd日">
+                <reportElement x="0" y="0" width="200" height="18" uuid="be1eda21-0359-444e-b588-16a40b52ecaa"/>
+                <textElement>
+                    <font fontName="Chinese" size="9" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="400" y="0" width="135" height="18" uuid="b1137d59-9066-43f6-985d-e761a1d36682"/>
+                <textElement textAlignment="Right">
+                    <font fontName="Chinese" size="9" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["第 " + $V{PAGE_NUMBER} + " 页"]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageHeader>
+
+    <columnHeader>
+        <band height="28" splitType="Stretch">
+            <rectangle>
+                <reportElement x="0" y="0" width="535" height="28" backcolor="#2C3E50" mode="Opaque" uuid="545cc39c-e245-43d4-9987-e60d1017b95b"/>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement x="0" y="0" width="160" height="28" forecolor="#FFFFFF" uuid="d2078997-a87f-4b8a-82dd-c7b59c422688"/>
+                <textElement verticalAlignment="Middle" textAlignment="Center">
+                    <font fontName="Chinese" size="10" isBold="true" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+                </textElement>
+                <text><![CDATA[产品名称 / Product Name]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="160" y="0" width="90" height="28" forecolor="#FFFFFF" uuid="cf02db1e-590c-4503-bc17-79dbc8221589"/>
+                <textElement verticalAlignment="Middle" textAlignment="Center">
+                    <font fontName="Chinese" size="10" isBold="true" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+                </textElement>
+                <text><![CDATA[数量]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="250" y="0" width="120" height="28" forecolor="#FFFFFF" uuid="b72eded6-1a3f-43b2-8ff4-66e6a0e3de50"/>
+                <textElement verticalAlignment="Middle" textAlignment="Center">
+                    <font fontName="Chinese" size="10" isBold="true" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+                </textElement>
+                <text><![CDATA[单价 (元)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="370" y="0" width="165" height="28" forecolor="#FFFFFF" uuid="87f89bc3-7594-4609-9e11-b2fa58a3462a"/>
+                <textElement verticalAlignment="Middle" textAlignment="Center">
+                    <font fontName="Chinese" size="10" isBold="true" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+                </textElement>
+                <text><![CDATA[合计 (元)]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="24" splitType="Stretch">
+            <textField isStretchWithOverflow="true">
+                <reportElement x="0" y="0" width="160" height="24" uuid="80f5988f-2db2-49b6-8000-c0e030e2f4d0"/>
+                <textElement verticalAlignment="Middle" textAlignment="Left">
+                    <font fontName="Chinese" size="9" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{productNameCN} != null && !$F{productNameCN}.isEmpty() ? $F{productNameCN} : $F{productName}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="160" y="0" width="90" height="24" uuid="00fb2e6a-7071-4225-9411-b980aacc5b85"/>
+                <textElement verticalAlignment="Middle" textAlignment="Center">
+                    <font fontName="Chinese" size="9" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{quantity}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00">
+                <reportElement x="250" y="0" width="120" height="24" uuid="2427c0e0-964e-4d78-9559-5c1725c884f0"/>
+                <textElement verticalAlignment="Middle" textAlignment="Right">
+                    <font fontName="Chinese" size="9" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{unitPrice}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00">
+                <reportElement x="370" y="0" width="165" height="24" uuid="78421453-68c4-4037-888e-90951fdc6535"/>
+                <textElement verticalAlignment="Middle" textAlignment="Right">
+                    <font fontName="Chinese" size="9" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{total}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <summary>
+        <band height="60" splitType="Stretch">
+            <line>
+                <reportElement x="0" y="4" width="535" height="1" uuid="b607501a-f0ab-49d2-a8df-b0dd5634a245"/>
+                <graphicElement>
+                    <pen lineWidth="1.5" lineColor="#2C3E50"/>
+                </graphicElement>
+            </line>
+            <staticText>
+                <reportElement x="0" y="12" width="370" height="24" uuid="0cc3a56d-5028-4bbc-aad9-d7d21e030aba"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font fontName="Chinese" size="12" isBold="true" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+                </textElement>
+                <text><![CDATA[总计：]]></text>
+            </staticText>
+            <textField pattern="¥#,##0.00">
+                <reportElement x="370" y="12" width="165" height="24" uuid="6b05b971-9b2f-46ec-a9bb-f4d15d2f4390"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font fontName="Chinese" size="12" isBold="true" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$V{grandTotal}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="0" y="40" width="535" height="18" forecolor="#7F8C8D" uuid="f6c23308-0644-47f9-9037-d7f2669e453c"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Chinese" size="8" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+                </textElement>
+                <text><![CDATA[本报告由系统自动生成，如有疑问请联系管理员。This report is system-generated.]]></text>
+            </staticText>
+        </band>
+    </summary>
+
+</jasperReport>

@@ -11,8 +11,14 @@
 .mtj.tmp/
 
 # Package Files #
+# The extension JAR is tracked deliberately; everything else stays ignored.
+*.jar
+!dist/jasperreports-ext-fonts.jar
 *.nar
 *.ear
+
+# Intermediate fonts (regenerate with: build.py --keep-ttf)
+dist/*.ttf
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
