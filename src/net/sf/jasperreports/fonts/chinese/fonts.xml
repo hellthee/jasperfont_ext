@@ -3,15 +3,16 @@
   JasperReports font extension — Simplified Chinese.
 
   Built by build.py from Noto Sans CJK SC. The font is modified (CFF
-  outlines converted to TrueType, OS/2 metrics realigned), so it is
-  renamed per SIL OFL 1.1 sections 3 and 5. See OFL.txt.
+  outlines converted to TrueType, OS/2 metrics realigned) but keeps its
+  upstream name: Noto carries no Reserved Font Name, so OFL 1.1 permits
+  this. The notice and license ship in OFL.txt per OFL section 2.
 
   pdfEncoding Identity-H is mandatory: a single-byte encoding cannot
   address CJK code points and characters outside it render blank.
 -->
 <fontFamilies>
 
-  <fontFamily name="Noto Sans SC Jasper">
+  <fontFamily name="Noto Sans SC">
     <normal>net/sf/jasperreports/fonts/chinese/NotoSansSC-Regular.ttf</normal>
     <bold>net/sf/jasperreports/fonts/chinese/NotoSansSC-Bold.ttf</bold>
     <italic>net/sf/jasperreports/fonts/chinese/NotoSansSC-Regular.ttf</italic>
@@ -19,8 +20,8 @@
     <pdfEncoding>Identity-H</pdfEncoding>
     <pdfEmbedded>true</pdfEmbedded>
     <exportFonts>
-      <export key="net.sf.jasperreports.html">"Noto Sans SC Jasper", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
-      <export key="net.sf.jasperreports.xhtml">"Noto Sans SC Jasper", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
+      <export key="net.sf.jasperreports.html">"Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
+      <export key="net.sf.jasperreports.xhtml">"Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
     </exportFonts>
   </fontFamily>
 
@@ -33,8 +34,8 @@
     <pdfEncoding>Identity-H</pdfEncoding>
     <pdfEmbedded>true</pdfEmbedded>
     <exportFonts>
-      <export key="net.sf.jasperreports.html">"Noto Sans SC Jasper", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
-      <export key="net.sf.jasperreports.xhtml">"Noto Sans SC Jasper", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
+      <export key="net.sf.jasperreports.html">"Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
+      <export key="net.sf.jasperreports.xhtml">"Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
     </exportFonts>
   </fontFamily>
 

@@ -33,7 +33,7 @@ too.
 Two families are registered, both backed by the same files:
 
 - `Chinese` — short alias
-- `Noto Sans SC Jasper` — full name
+- `Noto Sans SC` — full name
 
 `pdfEncoding="Identity-H"` is mandatory. A single-byte encoding cannot
 address CJK code points; characters outside it render blank with no error.
@@ -94,7 +94,7 @@ command line.
 pip install fonttools
 python3 build.py                         # downloads the source TTCs
 python3 build.py --ttc-dir /path/to/ttc  # or use local ones
-python3 build.py --family "Your Name"    # override the family name
+python3 build.py --family "Your Name"    # rename the font (optional)
 ```
 
 `build.py` checks common system font directories first and only downloads
@@ -129,9 +129,18 @@ upgrading OS/2 to version 4.
 Extension code, `build.py`, the Java utilities and the XML: MIT.
 
 The bundled font derives from Noto Sans CJK SC, licensed under the
-[SIL Open Font License 1.1](OFL.txt). The build modifies it (outline
-conversion and metric changes), and OFL sections 3 and 5 prohibit
-distributing a modified font under its original name — so the family is
-renamed to `Noto Sans SC Jasper` in both the `name` table and `fonts.xml`.
-If you fork this and change the font further, rename it again; do not
-reintroduce a Noto reserved font name.
+[SIL Open Font License 1.1](OFL.txt). The build modifies it — outline
+conversion and metric changes — and keeps the upstream name.
+
+That is permitted: Noto declares no Reserved Font Name. Its notice reads
+`Copyright 2010-2012 Google Corporation`, with no "with Reserved Font
+Name" clause, and OFL sections 3 and 5 restrict only Reserved Font Names.
+
+What OFL section 2 does require of every distribution, modified or not,
+is that the copyright notice and license text accompany the font. Both
+are in `OFL.txt`, which also records what was modified. Keep that file
+alongside the JAR if you redistribute it.
+
+`build.py --family NAME` rewrites the font's internal family name. It is
+off by default and exists for forks that alter the outlines or metrics
+further and would rather not answer to the upstream name.

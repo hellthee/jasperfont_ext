@@ -12,7 +12,7 @@ Pipeline
 2. Extract face index 2 (Noto Sans CJK SC) from each collection
 3. Convert CFF/OpenType outlines -> TrueType `glyf` outlines  (cu2qu)
 4. Patch OS/2 metrics so Word matches iText's line height
-5. Rename the font family (SIL OFL reserved-name compliance)
+5. Optionally rename the font family (--family; off by default)
 6. Package with fonts.xml + jasperreports_extension.properties
 
 Why step 3 is mandatory
@@ -44,12 +44,23 @@ exporter additionally hardcodes <w:spacing w:lineRule="auto" w:line="240"/>
 on every paragraph, which overrides font metrics; see
 java/DocxLineSpacingFixer.java.
 
-Why step 5 is required
+Why step 5 is optional
 ----------------------
-Noto Sans SC is licensed under the SIL Open Font License 1.1. Sections 3
-and 5 forbid distributing a *modified* font under its original name.
-Steps 3 and 4 modify it, so the family is renamed. The JRXML-facing alias
-"Chinese" is defined in fonts.xml and is unaffected.
+Noto is licensed under the SIL Open Font License 1.1 with NO Reserved
+Font Name: the copyright notice reads "Copyright 2010-2012 Google
+Corporation" with no "with Reserved Font Name" clause. OFL sections 3
+and 5 restrict only Reserved Font Names, so redistributing this font
+modified, under its own name, is permitted. The `name` table is
+therefore left untouched by default.
+
+What OFL section 2 does require of any distribution, modified or not, is
+that the copyright notice and the license text travel with the font —
+see OFL.txt.
+
+--family renames the family in the `name` table. It is here for forks
+that modify the outlines or metrics further and would rather not have
+their variant answer to the upstream name. It does not affect the family
+names JasperReports resolves: those come from fonts.xml.
 
 Usage
 -----
@@ -90,8 +101,10 @@ DIST_DIR = REPO / "dist"
 SRC_DIR = REPO / "src"
 FONT_PKG = "net/sf/jasperreports/fonts/chinese"
 
-# Default renamed family. Must not be a Noto reserved font name.
-DEFAULT_FAMILY = "Noto Sans SC Jasper"
+# fonts.xml declares this family; it must match or JRXMLs will not resolve.
+# Matches the upstream name — the `name` table is not rewritten unless
+# --family is passed explicitly.
+DECLARED_FAMILY = "Noto Sans SC"
 
 # Face index of "Noto Sans CJK SC" inside NotoSansCJK-*.ttc.
 # Collection order: 0 JP, 1 KR, 2 SC, 3 TC, 4 HK, 5-9 Mono variants.
@@ -294,7 +307,7 @@ def rename_family(font: TTFont, family: str, weight: str) -> None:
             )
 
 
-def build_font(ttc_path: Path, weight: str, family: str, out_path: Path) -> None:
+def build_font(ttc_path: Path, weight: str, family: str | None, out_path: Path) -> None:
     print(f"  {weight}: extracting face {SC_FACE_INDEX} from {ttc_path.name}")
     font = extract_sc_face(ttc_path)
 
@@ -302,7 +315,9 @@ def build_font(ttc_path: Path, weight: str, family: str, out_path: Path) -> None
     cff_to_truetype(font)
 
     align_metrics(font)
-    rename_family(font, family, weight)
+    if family:
+        print(f"  {weight}: renaming family to {family!r}")
+        rename_family(font, family, weight)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     font.save(str(out_path))
@@ -335,9 +350,6 @@ def verify(path: Path) -> None:
         sys.exit(f"{path.name}: OS/2 typo metrics not aligned to hhea")
     if not os2.fsSelection & 0x80:
         sys.exit(f"{path.name}: USE_TYPO_METRICS not set")
-    if "Noto Sans CJK" in (font["name"].getDebugName(1) or ""):
-        sys.exit(f"{path.name}: family still carries a Noto reserved name")
-
     cjk = sum(1 for cp in cmap if 0x4E00 <= cp <= 0x9FFF)
     print(
         f"  {path.name}: OK — TrueType, {cjk} CJK glyphs, "
@@ -371,13 +383,13 @@ def package(ttf_paths: dict[str, Path], jar_path: Path) -> None:
     print(f"\n  {jar_path.relative_to(REPO)}  ({jar_path.stat().st_size / 1e6:.1f} MB)")
 
 
-def check_family_matches_xml(family: str) -> None:
-    """Warn if fonts.xml does not declare the family being built."""
+def check_declared_family() -> None:
+    """Warn if fonts.xml stops declaring the family this build assumes."""
     xml = (SRC_DIR / FONT_PKG / "fonts.xml").read_text(encoding="utf-8")
-    if f'"{family}"' not in xml:
+    if f'"{DECLARED_FAMILY}"' not in xml:
         print(
-            f"  WARNING: fonts.xml does not declare fontFamily name=\"{family}\".\n"
-            f"           JRXMLs referencing that family will not resolve."
+            f"  WARNING: fonts.xml does not declare fontFamily "
+            f"name=\"{DECLARED_FAMILY}\"; JRXMLs using it will not resolve."
         )
 
 
@@ -387,14 +399,15 @@ def check_family_matches_xml(family: str) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     ap.add_argument("--ttc-dir", help="directory holding NotoSansCJK-*.ttc")
-    ap.add_argument("--family", default=DEFAULT_FAMILY,
-                    help=f"font family name (default: {DEFAULT_FAMILY!r})")
+    ap.add_argument("--family", default=None, metavar="NAME",
+                    help="rewrite the font's internal family name "
+                         "(default: leave the upstream name untouched)")
     ap.add_argument("--keep-ttf", action="store_true",
                     help="also leave the converted .ttf files in dist/")
     args = ap.parse_args()
 
     print("JasperReports Chinese font extension\n")
-    check_family_matches_xml(args.family)
+    check_declared_family()
 
     with tempfile.TemporaryDirectory(prefix="jasperfont_") as tmp:
         tmpdir = Path(tmp)

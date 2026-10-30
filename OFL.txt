@@ -1,3 +1,15 @@
+Copyright 2010-2012 Google Corporation.
+
+This Font Software is licensed under the SIL Open Font License,
+Version 1.1. No Reserved Font Names are declared.
+
+Source: https://github.com/notofonts/noto-cjk
+
+The font bundled in dist/jasperreports-ext-fonts.jar is a modified
+version of Noto Sans CJK SC: CFF outlines converted to TrueType, and
+OS/2 typographic metrics realigned to the hhea table. See build.py.
+
+-----------------------------------------------------------
 SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
 -----------------------------------------------------------
 
