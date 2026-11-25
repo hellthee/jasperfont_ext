@@ -11,12 +11,16 @@ import java.util.zip.*;
  * Post-processes a JasperReports-exported .docx file to fix Chinese (CJK)
  * character height consistency between PDF and Word exports.
  *
- * PROBLEM:
- *   JasperReports 6.6.0 hardcodes <w:spacing w:lineRule="auto" w:line="240"/>
- *   in exported .docx files. This means Word uses 1x the nominal font size
- *   as line height (e.g. 12pt font → 12pt line). But iText (used for PDF)
- *   uses the font's hhea metrics: for Noto Sans SC, that is 1448/1000 × fontSize
- *   = 17.376pt at 12pt — 44.8% taller than Word's default.
+ * NOTE — USUALLY UNNECESSARY:
+ *   JasperReports 6.6.0 writes <w:spacing w:lineRule="auto" w:line="240"/>,
+ *   which is single spacing: 1x the font's own natural line height, not a
+ *   fixed 12pt. With Noto Sans CJK SC installed, Word already arrives at
+ *   iText's 1448/1000 x fontSize (17.376pt at 12pt). This class pins that
+ *   value as an exact line height, which is redundant in that case.
+ *
+ *   NEVER run it after OoxmlFontSubstituter: the constant below is Noto's,
+ *   and forcing it onto Arial / Microsoft YaHei text is wrong and can clip
+ *   glyphs.
  *
  * FIX:
  *   After JasperReports exports the .docx, call DocxLineSpacingFixer.fix()

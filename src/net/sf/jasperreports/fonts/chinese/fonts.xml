@@ -9,6 +9,14 @@
 
   pdfEncoding Identity-H is mandatory: a single-byte encoding cannot
   address CJK code points and characters outside it render blank.
+
+  Office exports name "Noto Sans CJK SC": the font's internal family
+  name, and therefore the name Word/PowerPoint find when the TTF from
+  this build is installed. "Noto Sans SC" (the JasperReports family
+  name) would not match it. For recipients without the font, run
+  java/OoxmlFontSubstituter on docx/pptx output. Excel has no
+  per-script font on a cell, so xlsx/xls use Arial and Excel's own
+  fallback renders the Chinese.
 -->
 <fontFamilies>
 
@@ -20,8 +28,15 @@
     <pdfEncoding>Identity-H</pdfEncoding>
     <pdfEmbedded>true</pdfEmbedded>
     <exportFonts>
-      <export key="net.sf.jasperreports.html">"Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
-      <export key="net.sf.jasperreports.xhtml">"Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
+      <export key="net.sf.jasperreports.html">"Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
+      <export key="net.sf.jasperreports.xhtml">"Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
+      <export key="net.sf.jasperreports.docx">Noto Sans CJK SC</export>
+      <export key="net.sf.jasperreports.pptx">Noto Sans CJK SC</export>
+      <export key="net.sf.jasperreports.rtf">Noto Sans CJK SC</export>
+      <export key="net.sf.jasperreports.odt">Noto Sans CJK SC</export>
+      <export key="net.sf.jasperreports.ods">Noto Sans CJK SC</export>
+      <export key="net.sf.jasperreports.xlsx">Arial</export>
+      <export key="net.sf.jasperreports.xls">Arial</export>
     </exportFonts>
   </fontFamily>
 
@@ -34,8 +49,15 @@
     <pdfEncoding>Identity-H</pdfEncoding>
     <pdfEmbedded>true</pdfEmbedded>
     <exportFonts>
-      <export key="net.sf.jasperreports.html">"Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
-      <export key="net.sf.jasperreports.xhtml">"Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
+      <export key="net.sf.jasperreports.html">"Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
+      <export key="net.sf.jasperreports.xhtml">"Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", SimSun, sans-serif</export>
+      <export key="net.sf.jasperreports.docx">Noto Sans CJK SC</export>
+      <export key="net.sf.jasperreports.pptx">Noto Sans CJK SC</export>
+      <export key="net.sf.jasperreports.rtf">Noto Sans CJK SC</export>
+      <export key="net.sf.jasperreports.odt">Noto Sans CJK SC</export>
+      <export key="net.sf.jasperreports.ods">Noto Sans CJK SC</export>
+      <export key="net.sf.jasperreports.xlsx">Arial</export>
+      <export key="net.sf.jasperreports.xls">Arial</export>
     </exportFonts>
   </fontFamily>
 

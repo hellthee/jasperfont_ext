@@ -40,53 +40,88 @@ address CJK code points; characters outside it render blank with no error.
 `fonts.xml` sets it at the family level, but setting it per-element too is
 harmless and makes the requirement explicit in the report.
 
-Report-wide default:
+### Set the default font application-wide
 
-```xml
-<property name="net.sf.jasperreports.default.font.name" value="Chinese"/>
+Text elements without an explicit `fontName` use JasperReports' default,
+`SansSerif`, which is not in this extension. In PDF, Chinese text in such
+an element renders blank; in Office exports the document names a font no
+machine has. Set the default once in your application's
+`jasperreports.properties`:
+
+```properties
+net.sf.jasperreports.default.font.name=Chinese
 ```
+
+A per-report `<property name="net.sf.jasperreports.default.font.name"
+value="Chinese"/>` also works, but the properties file covers every report
+and every export format.
 
 See `examples/ChineseReportDemo.jrxml` and
 `java/ChinesePdfExportExample.java`.
 
-## Making .docx match PDF
+## Office exports
 
-Font metrics alone do not make Word agree with the PDF. Two separate
-defects in the JasperReports `.docx` exporter need patching after export.
+Office formats reference fonts by name rather than embedding them, so what
+the recipient sees depends on which fonts their machine has. `fonts.xml`
+maps the export names:
 
-### Line height
+| Format | Font name written | Why |
+|---|---|---|
+| docx, pptx, rtf, odt, ods | `Noto Sans CJK SC` | Internal family name of the bundled TTF — the name Office finds once that TTF is installed. `Noto Sans SC` would not match it. |
+| xlsx, xls | `Arial` | A cell font has no per-script slot; Excel's own fallback renders the Chinese. |
 
-iText derives line height from the font's `hhea` table: for this font
-(ascent 1160, descent -288, UPM 1000) that is 1.448 × font size — 17.376pt
-at 12pt. The exporter writes `<w:spacing w:lineRule="auto" w:line="240"/>`
-on every paragraph, which pins Word to exactly 12pt regardless of font
-size and overrides the font's own metrics.
+### Two tiers of recipients
 
-`java/DocxLineSpacingFixer.java` rewrites each paragraph's spacing to
-`lineRule="exact"` with the iText-equivalent value, derived from that
-paragraph's font size. Image paragraphs are left alone.
+**Tier 1 — Noto Sans CJK SC installed.** Install both TTFs on the
+recipient's machine: `python3 build.py --keep-ttf` leaves them in `dist/`.
+Install those, not Google Fonts' "Noto Sans SC": that is a different
+build with a different name. Word then renders with the same font as the
+PDF and the same metrics: it reads the win metrics (1160 + 288), giving
+1.448 × font size, which is what iText uses.
+
+**Tier 2 — no Noto.** `java/OoxmlFontSubstituter.java` rewrites docx and
+pptx so Latin text uses Arial and East Asian text uses Microsoft YaHei.
+fonts.xml can't do this: `exportFonts` holds one name per format, and
+JasperReports writes that one name into every script slot. Both formats
+support a font per script. The substituter fills them separately and
+leaves fonts it didn't write alone.
+
+```java
+JasperExportManager.exportReportToDocxFile(jasperPrint, path);
+DocxPageBreakRemover.fixInPlace(path);              // every docx
+if (!recipientHasNoto) {
+    OoxmlFontSubstituter.fixInPlace(path);          // Arial + Microsoft YaHei
+}
+```
+
+pptx: call `OoxmlFontSubstituter.fixInPlace(path)` for tier 2. It needs
+no page-break step.
+
+In tier 2 the output does not match the PDF exactly, since it uses
+different fonts. That is the tradeoff.
 
 ### Page breaks
 
-The exporter emits each report page as a separate `<w:tbl>` and puts
+The docx exporter emits each report page as a separate `<w:tbl>` and puts
 `<w:pageBreakBefore/>` in the first cell of every table after the first.
 Word then starts a new page even when the content fits on the current one,
-producing trailing blank pages.
+producing trailing blank pages. `java/DocxPageBreakRemover.java` strips
+those elements. Run it for both tiers.
 
-`java/DocxPageBreakRemover.java` strips those elements.
+### Line height
 
-### Order
+The exporter writes `<w:spacing w:lineRule="auto" w:line="240"/>`: single
+spacing, i.e. 1 × the font's own natural line height. With Noto Sans CJK
+SC installed that already equals iText's 1.448 ×, so Word matches the PDF
+without help.
 
-```java
-JasperExportManager.exportReportToDocxFile(jasperPrint, "/tmp/report.docx");
-DocxPageBreakRemover.fixInPlace("/tmp/report.docx");   // first
-DocxLineSpacingFixer.fixInPlace("/tmp/report.docx");   // second
-```
+`java/DocxLineSpacingFixer.java` converts this to `lineRule="exact"` at
+1.448 × font size. That's redundant in tier 1 and **wrong in tier 2**: it
+would force Noto's line height onto Arial/YaHei text and can clip glyphs.
+Never run it after `OoxmlFontSubstituter`.
 
-Page breaks first — no point computing spacing for paragraphs on a page
-that is about to be removed. Both classes are dependency-free (Java 8+,
-`java.util.zip` and `java.util.regex` only) and can be run from the
-command line.
+All three classes are dependency-free (Java 8+, `java.util.zip` and
+`java.util.regex` only) and can be run from the command line.
 
 ## Building
 
