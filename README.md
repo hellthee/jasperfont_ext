@@ -4,7 +4,8 @@ JasperReports font extension for Simplified Chinese. Renders CJK text
 correctly in PDF export and keeps line heights consistent between PDF and
 `.docx` export.
 
-Built and tested against **JasperReports 6.6.0** (iText 2.1.7.js6).
+Supports **JasperReports 6.6.0** (PDF via iText 2.1.7.js6) and
+**6.21.5** (PDF via OpenPDF 1.3.32). See [Upgrading to 6.21.5](#upgrading-to-6215).
 
 ## Install
 
@@ -68,7 +69,7 @@ maps the export names:
 | Format | Font name written | Why |
 |---|---|---|
 | docx, pptx, rtf, odt, ods | `Noto Sans CJK SC` | Internal family name of the bundled TTF — the name Office finds once that TTF is installed. `Noto Sans SC` would not match it. |
-| xlsx, xls | `Arial` | A cell font has no per-script slot; Excel's own fallback renders the Chinese. |
+| xlsx, xls, metadata xlsx | `Arial` | A cell font has no per-script slot; Excel's own fallback renders the Chinese. `JRXlsxMetadataExporter` reads its own key, `net.sf.jasperreports.metadata.xlsx`. |
 
 ### Two tiers of recipients
 
@@ -102,11 +103,15 @@ different fonts. That is the tradeoff.
 
 ### Page breaks
 
-The docx exporter emits each report page as a separate `<w:tbl>` and puts
-`<w:pageBreakBefore/>` in the first cell of every table after the first.
-Word then starts a new page even when the content fits on the current one,
-producing trailing blank pages. `java/DocxPageBreakRemover.java` strips
-those elements. Run it for both tiers.
+The docx exporter writes each report page as a separate `<w:tbl>` and
+puts `<w:pageBreakBefore/>` in the first cell of every page after the
+first. These are real page boundaries — the PDF has the same pages — and
+must stay. Removing them runs separate report pages together in Word.
+
+`java/DocxPageBreakRemover.java` removes a break only when the page it
+starts is blank: no visible text and no image. That removes the blank pages
+Word can show, and keeps every page that has content. Run it for both
+tiers.
 
 ### Line height
 
@@ -122,6 +127,30 @@ Never run it after `OoxmlFontSubstituter`.
 
 All three classes are dependency-free (Java 8+, `java.util.zip` and
 `java.util.regex` only) and can be run from the command line.
+
+## Upgrading to 6.21.5
+
+Checked against the 6.21.5 sources. The docx/pptx/xls/xlsx exporters
+behave as in 6.6.0 where this project depends on them. They write one
+font name into every script slot, write the same page breaks and line
+spacing, and use the same exporter keys. The font extension format is
+unchanged. No change to the JAR or the post-processors is needed.
+
+What changes:
+
+- **PDF engine is OpenPDF 1.3.32, not iText 2.1.7.** The bundled
+  TrueType font works with both. Remove `itext-2.1.7.js*.jar` from the
+  classpath: both libraries use the `com.lowagie` packages, so having both
+  gives duplicate-class conflicts.
+- **Recompile `.jasper` files with 6.21.5.** iReport's last release
+  (5.6.0) bundles JasperReports 5.6. It can still edit JRXML, but compile
+  at runtime or use Jaspersoft Studio.
+- **`isStretchWithOverflow` is deprecated.** Use
+  `textAdjust="StretchHeight"`. The old attribute still works.
+- **Leave `net.sf.jasperreports.export.docx.embed.fonts` (and
+  `pptx.embed.fonts`) off.** It copies the whole TTF from `fonts.xml` into
+  every file, with no subsetting. With these fonts that adds tens of MB per
+  document.
 
 ## Building
 

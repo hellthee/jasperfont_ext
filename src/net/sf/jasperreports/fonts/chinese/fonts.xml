@@ -37,6 +37,7 @@
       <export key="net.sf.jasperreports.ods">Noto Sans CJK SC</export>
       <export key="net.sf.jasperreports.xlsx">Arial</export>
       <export key="net.sf.jasperreports.xls">Arial</export>
+      <export key="net.sf.jasperreports.metadata.xlsx">Arial</export>
     </exportFonts>
   </fontFamily>
 
@@ -58,6 +59,7 @@
       <export key="net.sf.jasperreports.ods">Noto Sans CJK SC</export>
       <export key="net.sf.jasperreports.xlsx">Arial</export>
       <export key="net.sf.jasperreports.xls">Arial</export>
+      <export key="net.sf.jasperreports.metadata.xlsx">Arial</export>
     </exportFonts>
   </fontFamily>
 

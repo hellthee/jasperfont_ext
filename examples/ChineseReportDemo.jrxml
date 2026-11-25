@@ -118,7 +118,7 @@
 
     <detail>
         <band height="24" splitType="Stretch">
-            <textField isStretchWithOverflow="true">
+            <textField textAdjust="StretchHeight">
                 <reportElement x="0" y="0" width="160" height="24" uuid="80f5988f-2db2-49b6-8000-c0e030e2f4d0"/>
                 <textElement verticalAlignment="Middle" textAlignment="Left">
                     <font fontName="Chinese" size="9" pdfEncoding="Identity-H" isPdfEmbedded="true"/>

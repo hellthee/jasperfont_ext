@@ -3,6 +3,7 @@ package com.example.jasper;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
+import net.sf.jasperreports.engine.fonts.FontFamily;
 import net.sf.jasperreports.export.*;
 
 import java.io.*;
@@ -13,9 +14,9 @@ import java.util.*;
  * Example: Export a JasperReport with Chinese characters to PDF.
  *
  * Prerequisites:
- *   1. jasperreports-6.6.0.jar on classpath
+ *   1. jasperreports-6.21.5.jar (or 6.6.0) on classpath
  *   2. jasperreports-chinese-fonts-1.0.0.jar on classpath  <-- this extension
- *   3. itext-2.1.7.js6.jar (ships with JasperReports 6.6.0)
+ *   3. 6.21.5: openpdf-1.3.32.jar   6.6.0: itext-2.1.7.js6.jar  (never both)
  *   4. commons-logging, commons-collections, commons-beanutils, etc.
  */
 public class ChinesePdfExportExample {
@@ -67,8 +68,8 @@ public class ChinesePdfExportExample {
 
         // Optional PDF metadata
         SimplePdfExporterConfiguration config = new SimplePdfExporterConfiguration();
-        config.setCreatorInfo("jasperreports-chinese-fonts-extension v1.0.0");
-        config.setSubject("Chinese Character PDF Export Demo");
+        config.setMetadataCreator("jasperreports-chinese-fonts-extension v1.0.0");
+        config.setMetadataSubject("Chinese Character PDF Export Demo");
         exporter.setConfiguration(config);
 
         exporter.exportReport();
@@ -80,8 +81,9 @@ public class ChinesePdfExportExample {
      */
     private static void verifyFontRegistration() {
         System.out.println("=== Registered JasperReports font families ===");
-        FontUtil fontUtil = FontUtil.getInstance(DefaultJasperReportsContext.getInstance());
-        for (net.sf.jasperreports.engine.fonts.FontFamily ff : fontUtil.getFontFamilies()) {
+        List<FontFamily> families =
+                DefaultJasperReportsContext.getInstance().getExtensions(FontFamily.class);
+        for (FontFamily ff : families) {
             System.out.println("  " + ff.getName());
         }
         System.out.println("==============================================");

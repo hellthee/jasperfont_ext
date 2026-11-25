@@ -1,160 +1,155 @@
 package com.example.jasper;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.regex.*;
-import java.util.zip.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 /**
  * DocxPageBreakRemover
  *
- * Removes forced page breaks inserted by the JasperReports 6.6.0 docx exporter.
+ * Removes page breaks in a JasperReports .docx export that lead only to a
+ * blank page. Page breaks before pages with content are kept.
  *
- * PROBLEM:
- *   JasperReports exports each PDF page as a separate <w:tbl> (Word table).
- *   The first cell of every table after the first one contains:
- *     <w:pageBreakBefore/>
- *   inside its <w:pPr>, which forces Word to start a new page regardless
- *   of how much space remains — even when the entire report fits on one page.
+ * BACKGROUND:
+ *   The JasperReports docx exporter (6.6.0 and 6.21.5 alike) writes each
+ *   report page as a <w:tbl> and puts <w:pageBreakBefore/> in the first
+ *   paragraph of every page after the first. Those breaks are real page
+ *   boundaries and must normally stay: removing them makes Word run
+ *   separate report pages together, so the document no longer matches the
+ *   PDF.
  *
- * FIX:
- *   Strip all <w:pageBreakBefore/> elements from word/document.xml.
- *   Image paragraphs and empty cells are unaffected.
+ *   A break is removed only when the page it starts is blank: no visible
+ *   text (a <w:t> with a non-whitespace character) and no image
+ *   (<w:drawing> or <w:pict>). Such pages show up in Word as trailing or
+ *   interstitial blank pages.
  *
- * USAGE — standalone after JasperReports export:
- *   DocxPageBreakRemover.fix("/tmp/report.docx", "/tmp/report_fixed.docx");
+ *   A page extends from its break to the next break, or to the end of the
+ *   body for the last page.
  *
- * USAGE — in-place:
- *   DocxPageBreakRemover.fixInPlace("/tmp/report.docx");
- *
- * USAGE — chain with DocxLineSpacingFixer:
- *   JasperExportManager.exportReportToDocxFile(jasperPrint, "/tmp/report.docx");
- *   DocxPageBreakRemover.fixInPlace("/tmp/report.docx");
- *   DocxLineSpacingFixer.fixInPlace("/tmp/report.docx");
+ * USAGE:
+ *   JasperExportManager.exportReportToDocxFile(jasperPrint, path);
+ *   DocxPageBreakRemover.fixInPlace(path);
  *
  * REQUIREMENTS:
  *   Java 8+, no additional dependencies.
  */
 public class DocxPageBreakRemover {
 
-    // Matches <w:pageBreakBefore/> with any surrounding whitespace/newlines
-    private static final Pattern PAGE_BREAK_PATTERN = Pattern.compile(
-            "\\s*<w:pageBreakBefore/>\\s*", Pattern.DOTALL);
+    private static final Pattern PAGE_BREAK = Pattern.compile("<w:pageBreakBefore/>");
+
+    /** A text run with at least one visible character. Excludes w:tbl, w:tc. */
+    private static final Pattern VISIBLE_TEXT = Pattern.compile(
+            "<w:t(?:\\s[^>]*)?>[^<]*\\S[^<]*</w:t>");
 
     /**
-     * Remove page breaks from a JasperReports .docx export.
+     * Remove page breaks that lead only to blank pages.
      *
-     * @param inputPath  path to the JR-exported .docx
-     * @param outputPath path for the fixed output .docx
-     * @throws IOException on read/write error
+     * @param inputPath  JasperReports .docx export
+     * @param outputPath where to write the result (may equal inputPath)
      */
     public static void fix(String inputPath, String outputPath) throws IOException {
-        File inputFile  = new File(inputPath);
-        File outputFile = new File(outputPath);
-        File tempFile   = File.createTempFile("docx_pbr_", ".docx",
-                outputFile.getParentFile());
+        File outputFile = new File(outputPath).getAbsoluteFile();
+        File tempFile   = File.createTempFile("docx_pbr_", ".tmp", outputFile.getParentFile());
+        int removed = 0;
+        int kept    = 0;
 
-        try (ZipInputStream  zin  = new ZipInputStream(new FileInputStream(inputFile));
+        try (ZipInputStream  zin  = new ZipInputStream(new FileInputStream(inputPath));
              ZipOutputStream zout = new ZipOutputStream(new FileOutputStream(tempFile))) {
 
+            byte[] chunk = new byte[8192];
             ZipEntry entry;
             while ((entry = zin.getNextEntry()) != null) {
-                zout.putNextEntry(new ZipEntry(entry.getName()));
+                ByteArrayOutputStream buf = new ByteArrayOutputStream();
+                int n;
+                while ((n = zin.read(chunk)) != -1) {
+                    buf.write(chunk, 0, n);
+                }
+                byte[] data = buf.toByteArray();
 
                 if ("word/document.xml".equals(entry.getName())) {
-                    byte[] xmlBytes = readAllBytes(zin);
-                    String xml      = new String(xmlBytes, StandardCharsets.UTF_8);
-                    String fixed    = removePageBreaks(xml);
-                    zout.write(fixed.getBytes(StandardCharsets.UTF_8));
-                } else {
-                    copyStream(zin, zout);
+                    String xml = new String(data, StandardCharsets.UTF_8);
+
+                    // pass 1: count breaks, so the arrays can be sized directly
+                    Matcher m = PAGE_BREAK.matcher(xml);
+                    int total = 0;
+                    while (m.find()) {
+                        total++;
+                    }
+                    int[] starts = new int[total];
+                    int[] ends   = new int[total];
+                    m.reset();
+                    int i = 0;
+                    while (m.find()) {
+                        starts[i] = m.start();
+                        ends[i]   = m.end();
+                        i++;
+                    }
+
+                    int bodyEnd = xml.lastIndexOf("<w:sectPr");
+                    if (bodyEnd < 0) {
+                        bodyEnd = xml.lastIndexOf("</w:body>");
+                    }
+                    if (bodyEnd < 0) {
+                        bodyEnd = xml.length();
+                    }
+
+                    // pass 2: drop a break only if its page has nothing visible
+                    StringBuilder out = new StringBuilder(xml.length());
+                    int pos = 0;
+                    for (i = 0; i < total; i++) {
+                        int pageEnd = (i + 1 < total) ? starts[i + 1] : bodyEnd;
+                        String page = xml.substring(ends[i], Math.max(ends[i], pageEnd));
+                        boolean blank = !VISIBLE_TEXT.matcher(page).find()
+                                && page.indexOf("<w:drawing") < 0
+                                && page.indexOf("<w:pict") < 0;
+                        if (blank) {
+                            out.append(xml, pos, starts[i]);
+                            pos = ends[i];
+                            removed++;
+                        } else {
+                            kept++;
+                        }
+                    }
+                    out.append(xml, pos, xml.length());
+                    data = out.toString().getBytes(StandardCharsets.UTF_8);
                 }
 
+                zout.putNextEntry(new ZipEntry(entry.getName()));
+                zout.write(data);
                 zout.closeEntry();
                 zin.closeEntry();
             }
-        }
-
-        // Atomic replace
-        if (outputFile.exists()) outputFile.delete();
-        if (!tempFile.renameTo(outputFile)) {
-            copyFile(tempFile, outputFile);
+        } catch (IOException e) {
             tempFile.delete();
+            throw e;
         }
+
+        Files.move(tempFile.toPath(), outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        System.out.printf("[DocxPageBreakRemover] removed %d break(s) before blank pages,"
+                + " kept %d before pages with content%n", removed, kept);
     }
 
-    /**
-     * Remove page breaks in-place (overwrites the original file).
-     *
-     * @param filePath path to the .docx file to fix
-     * @throws IOException on read/write error
-     */
+    /** Remove blank-page breaks in place. */
     public static void fixInPlace(String filePath) throws IOException {
-        String tempPath = filePath + ".tmp";
-        fix(filePath, tempPath);
-        new File(filePath).delete();
-        new File(tempPath).renameTo(new File(filePath));
+        fix(filePath, filePath);
     }
-
-    // -------------------------------------------------------------------------
-    // Core processing
-    // -------------------------------------------------------------------------
-
-    private static String removePageBreaks(String xml) {
-        Matcher m = PAGE_BREAK_PATTERN.matcher(xml);
-        int count = 0;
-        StringBuffer sb = new StringBuffer();
-        while (m.find()) {
-            m.appendReplacement(sb, "");
-            count++;
-        }
-        m.appendTail(sb);
-        System.out.printf("[DocxPageBreakRemover] removed %d <w:pageBreakBefore/> element(s)%n",
-                count);
-        return sb.toString();
-    }
-
-    // -------------------------------------------------------------------------
-    // I/O helpers
-    // -------------------------------------------------------------------------
-
-    private static byte[] readAllBytes(InputStream in) throws IOException {
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        byte[] chunk = new byte[8192];
-        int n;
-        while ((n = in.read(chunk)) != -1) buf.write(chunk, 0, n);
-        return buf.toByteArray();
-    }
-
-    private static void copyStream(InputStream in, OutputStream out) throws IOException {
-        byte[] buf = new byte[8192];
-        int n;
-        while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
-    }
-
-    private static void copyFile(File src, File dst) throws IOException {
-        try (FileInputStream  fis = new FileInputStream(src);
-             FileOutputStream fos = new FileOutputStream(dst)) {
-            copyStream(fis, fos);
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Command-line entry point
-    // -------------------------------------------------------------------------
 
     public static void main(String[] args) throws IOException {
         if (args.length < 1) {
             System.err.println("Usage: DocxPageBreakRemover <input.docx> [output.docx]");
-            System.err.println("       If output is omitted, fixes in-place.");
+            System.err.println("       If output is omitted, fixes in place.");
             System.exit(1);
         }
-        if (args.length == 1) {
-            fixInPlace(args[0]);
-            System.out.println("Done (in-place): " + args[0]);
-        } else {
-            fix(args[0], args[1]);
-            System.out.println("Done: " + args[1]);
-        }
+        fix(args[0], args.length > 1 ? args[1] : args[0]);
     }
 }
